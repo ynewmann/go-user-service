@@ -5,12 +5,15 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"log"
 
 	_ "github.com/lib/pq"
 
 	"go-user-service/src/repository"
 	"go-user-service/src/repository/models"
+)
+
+const (
+	dbName = "users_db"
 )
 
 var _ repository.Repository = (*Repository)(nil)
@@ -38,7 +41,13 @@ func NewRepository(cfg repository.Config) (*Repository, error) {
 
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
-		log.Fatalf("Failed to connect to database: %v", err)
+		return nil, errors.Join(ErrDatabase, err)
+	}
+
+	// TODO maybe add migrations.
+	err = createDatabase(db)
+	if err != nil {
+		return nil, errors.Join(ErrDatabase, err)
 	}
 
 	return &Repository{conn: db}, nil
@@ -128,4 +137,26 @@ func (r *Repository) Delete(ctx context.Context, id int) error {
 	}
 
 	return nil
+}
+
+func createDatabase(db *sql.DB) error {
+	var exists bool
+	query := `SELECT EXISTS (SELECT FROM pg_database WHERE datname = $1)`
+	err := db.QueryRow(query, dbName).Scan(&exists)
+	if err != nil {
+		return err
+	}
+
+	if exists {
+		return nil
+	}
+
+	_, err = db.Exec(`
+	CREATE TABLE IF NOT EXISTS users (
+		id SERIAL PRIMARY KEY,
+		email TEXT UNIQUE NOT NULL,
+		name TEXT NOT NULL
+	);
+`)
+	return err
 }
