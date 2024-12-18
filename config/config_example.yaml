@@ -1,7 +1,7 @@
 server:
   port: 8080
 database:
-  host: localhost
+  host: postgres-db
   port: 5432
   user: postgrespass
   password: postgres
