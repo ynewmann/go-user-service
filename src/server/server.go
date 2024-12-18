@@ -16,10 +16,10 @@ type Server struct {
 	cfg Config
 
 	app     *fiber.App
-	handler handlers.Handler
+	handler *handlers.Handler
 }
 
-func New(cfg Config, handler handlers.Handler) *Server {
+func New(cfg Config, handler *handlers.Handler) *Server {
 	app := fiber.New()
 
 	app.Post("/users", handler.Create)

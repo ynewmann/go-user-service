@@ -40,10 +40,10 @@ type UpdateEmailRequest struct {
 }
 
 type Handler struct {
-	controller controllers.Controller
+	controller *controllers.Controller
 }
 
-func NewHandler(controller controllers.Controller) *Handler {
+func New(controller *controllers.Controller) *Handler {
 	return &Handler{controller: controller}
 }
 

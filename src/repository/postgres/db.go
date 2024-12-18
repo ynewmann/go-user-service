@@ -21,20 +21,11 @@ var (
 	ErrNotFound = errors.New("not found")
 )
 
-type Config struct {
-	Host     string `mapstructure:"host"`
-	Port     int    `mapstructure:"port"`
-	User     string `mapstructure:"user"`
-	Password string `mapstructure:"password"`
-	DbName   string `mapstructure:"dbname"`
-	SslMode  bool   `mapstructure:"sslmode"`
-}
-
 type Repository struct {
 	conn *sql.DB
 }
 
-func NewRepository(cfg Config) (*Repository, error) {
+func NewRepository(cfg repository.Config) (*Repository, error) {
 	dsn := fmt.Sprintf(
 		"host=%s port=%d user=%s password=%s dbname=%s sslmode=%t",
 		cfg.Host,
