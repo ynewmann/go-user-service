@@ -9,7 +9,7 @@ services:
       POSTGRES_PASSWORD: postgres # or use ${POSTGRES_PASSWORD} for example
       POSTGRES_DB: user_db
     ports:
-      - "5433:5432"
+      - "5432:5432"
     networks:
       - user-network
 
