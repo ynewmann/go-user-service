@@ -9,7 +9,7 @@ services:
       POSTGRES_PASSWORD: postgres # or use ${POSTGRES_PASSWORD} for example
       POSTGRES_DB: user_db
     ports:
-      - "5432:5432"
+      - "5433:5432"
     networks:
       - user-network
 
@@ -19,9 +19,9 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     container_name: user-app
-    command: /main run -f /configs/.config.yaml
+    command: /main run -c /config/config.yaml
     volumes:
-      - ./configs/.config.yaml:/configs/.config.yaml
+      - ./config/config.yaml:/config/config.yaml
     ports:
       - "8080:8080"
     depends_on:
