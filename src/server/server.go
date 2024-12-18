@@ -2,8 +2,10 @@ package server
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/gofiber/fiber/v2"
+	"go.uber.org/zap"
 
 	"go-user-service/src/handlers"
 )
@@ -17,9 +19,11 @@ type Server struct {
 
 	app     *fiber.App
 	handler *handlers.Handler
+
+	logger *zap.Logger
 }
 
-func New(cfg Config, handler *handlers.Handler) *Server {
+func New(cfg Config, logger *zap.Logger, handler *handlers.Handler) *Server {
 	app := fiber.New()
 
 	app.Post("/users", handler.Create)
@@ -32,10 +36,12 @@ func New(cfg Config, handler *handlers.Handler) *Server {
 		cfg:     cfg,
 		app:     app,
 		handler: handler,
+		logger:  logger,
 	}
 }
 
 func (s *Server) Start() error {
+	s.logger.Info(fmt.Sprintf("server listening on port %s", s.cfg.Port))
 	return s.app.Listen(":" + s.cfg.Port)
 }
 

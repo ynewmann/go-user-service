@@ -97,7 +97,7 @@ func runRootCmd(cmd *cobra.Command, args []string) error {
 
 	userController := controllers.New(repo)
 	userHandler := handlers.New(userController)
-	microservice := server.New(config.Server, userHandler)
+	microservice := server.New(config.Server, logger, userHandler)
 
 	err = microservice.Start()
 	if err != nil {
