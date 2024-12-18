@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -24,7 +25,9 @@ import (
 	"go-user-service/src/repository/postgres"
 )
 
-func setupApp() (*Server, error) {
+type shutDown = func() error
+
+func setupApp() (*Server, shutDown, error) {
 	ctx := context.Background()
 
 	testUser := "user"
@@ -41,20 +44,17 @@ func setupApp() (*Server, error) {
 		testcontainers.WithLogger(testcontainers.Logger),
 	)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-
-	dur := time.Second
-	defer pgContainer.Stop(ctx, &dur)
 
 	dbHost, err := pgContainer.Host(ctx)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	dbPortStr, err := pgContainer.MappedPort(ctx, "5432")
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	repo, err := postgres.NewRepository(repository.Config{
@@ -66,7 +66,7 @@ func setupApp() (*Server, error) {
 		SslMode:  "disable",
 	})
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	logger, err := zap.NewProduction()
@@ -80,12 +80,22 @@ func setupApp() (*Server, error) {
 	microservice := New(Config{Port: "8081"}, logger, userHandler)
 	go microservice.Start()
 
-	return microservice, nil
+	shutDown := func() error {
+		var err error
+		dur := time.Second
+		err = errors.Join(err, pgContainer.Stop(ctx, &dur))
+		err = errors.Join(err, microservice.Shutdown(ctx))
+
+		return err
+	}
+
+	return microservice, shutDown, err
 }
 
 func TestUser(t *testing.T) {
-	server, err := setupApp()
+	server, shudDown, err := setupApp()
 	require.NoError(t, err, err)
+	defer shudDown()
 
 	user := handlers.CreateRequest{
 		Email: "test@example.com",
