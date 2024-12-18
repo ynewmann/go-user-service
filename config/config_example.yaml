@@ -3,7 +3,7 @@ server:
 database:
   host: localhost
   port: 5432
-  user: postgres
-  password: postgrespass
-  name: users_db
+  user: postgrespass
+  password: postgres
+  dbname: users_db
   sslmode: disable
