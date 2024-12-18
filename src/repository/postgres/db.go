@@ -30,7 +30,7 @@ type Repository struct {
 
 func NewRepository(cfg repository.Config) (*Repository, error) {
 	dsn := fmt.Sprintf(
-		"host=%s port=%d user=%s password=%s dbname=%s sslmode=%t",
+		"host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
 		cfg.Host,
 		cfg.Port,
 		cfg.User,
@@ -53,11 +53,11 @@ func NewRepository(cfg repository.Config) (*Repository, error) {
 	return &Repository{conn: db}, nil
 }
 
-func (r *Repository) Create(ctx context.Context, user models.User) (int, error) {
-	query := `INSERT INTO users(email, name) VALUES ($1)`
+func (r *Repository) Create(ctx context.Context, user *models.User) (int, error) {
+	query := `INSERT INTO users(email, name) VALUES ($1, $2) RETURNING id`
 
 	id := 0
-	err := r.conn.QueryRowContext(ctx, query, user.Email, user.Name).Scan(id)
+	err := r.conn.QueryRowContext(ctx, query, user.Email, user.Name).Scan(&id)
 	if err != nil {
 		return 0, errors.Join(ErrDatabase, err)
 	}
@@ -65,17 +65,17 @@ func (r *Repository) Create(ctx context.Context, user models.User) (int, error) 
 	return id, nil
 }
 
-func (r *Repository) Get(ctx context.Context, id int) (models.User, error) {
+func (r *Repository) Get(ctx context.Context, id int) (*models.User, error) {
 	query := "SELECT email, name FROM users WHERE id = $1"
-	user := models.User{Id: id}
+	user := &models.User{Id: id}
 
 	row := r.conn.QueryRowContext(ctx, query, id)
-	if err := row.Scan(&user.Email); err != nil {
+	if err := row.Scan(&user.Email, &user.Name); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return models.User{}, errors.Join(ErrDatabase, ErrNotFound)
+			return nil, errors.Join(ErrDatabase, ErrNotFound)
 		}
 
-		return models.User{}, errors.Join(ErrDatabase, err)
+		return nil, errors.Join(ErrDatabase, err)
 	}
 
 	return user, nil
@@ -100,9 +100,9 @@ func (r *Repository) UpdateEmail(ctx context.Context, id int, email string) erro
 	return nil
 }
 
-func (r *Repository) Update(ctx context.Context, user models.User) error {
+func (r *Repository) Update(ctx context.Context, user *models.User) error {
 	query := "UPDATE users SET email = $1, name = $2 WHERE id = $3"
-	res, err := r.conn.ExecContext(ctx, query, user.Email, user.Name)
+	res, err := r.conn.ExecContext(ctx, query, user.Email, user.Name, user.Id)
 	if err != nil {
 		return errors.Join(ErrDatabase, err)
 	}

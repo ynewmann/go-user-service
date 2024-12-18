@@ -6,4 +6,4 @@ database:
   user: postgres
   password: postgrespass
   name: users_db
-  sslmode: false
+  sslmode: disable

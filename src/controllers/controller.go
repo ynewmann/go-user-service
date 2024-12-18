@@ -21,7 +21,7 @@ func New(repo repository.Repository) *Controller {
 	return &Controller{repo: repo}
 }
 
-func (c *Controller) Create(ctx context.Context, user models.User) (int, error) {
+func (c *Controller) Create(ctx context.Context, user *models.User) (int, error) {
 	err := validateUser(user)
 	if err != nil {
 		return 0, err
@@ -30,11 +30,11 @@ func (c *Controller) Create(ctx context.Context, user models.User) (int, error) 
 	return c.repo.Create(ctx, user)
 }
 
-func (c *Controller) Get(ctx context.Context, id int) (models.User, error) {
+func (c *Controller) Get(ctx context.Context, id int) (*models.User, error) {
 	return c.repo.Get(ctx, id)
 }
 
-func (c *Controller) Update(ctx context.Context, user models.User) error {
+func (c *Controller) Update(ctx context.Context, user *models.User) error {
 	err := validateUser(user)
 	if err != nil {
 		return err
@@ -55,7 +55,7 @@ func (c *Controller) Delete(ctx context.Context, id int) error {
 	return c.repo.Delete(ctx, id)
 }
 
-func validateUser(user models.User) error {
+func validateUser(user *models.User) error {
 	if user.Email == "" {
 		return ErrBadEmail
 	}

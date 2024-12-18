@@ -53,7 +53,7 @@ func (h *Handler) Create(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).SendString(ErrBadUserPayload.Error())
 	}
 
-	id, err := h.controller.Create(c.UserContext(), models.User{Email: req.Email, Name: req.Name})
+	id, err := h.controller.Create(c.UserContext(), &models.User{Email: req.Email, Name: req.Name})
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).SendString(ErrInternal.Error())
 	}
@@ -86,7 +86,7 @@ func (h *Handler) Update(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(ErrorResponse{Error: ErrBadUserPayload.Error()})
 	}
 
-	user := models.User{
+	user := &models.User{
 		Id:    id,
 		Email: req.Email,
 		Name:  req.Name,
