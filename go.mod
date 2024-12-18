@@ -1,0 +1,1 @@
+module go-user-service
