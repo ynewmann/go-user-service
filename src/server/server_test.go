@@ -15,6 +15,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
 	testpostgres "github.com/testcontainers/testcontainers-go/modules/postgres"
+	"go.uber.org/zap"
 
 	"go-user-service/src/controllers"
 	"go-user-service/src/handlers"
@@ -68,9 +69,16 @@ func setupApp() (*Server, error) {
 		return nil, err
 	}
 
+	logger, err := zap.NewProduction()
+	if err != nil {
+		panic(err)
+	}
+	defer logger.Sync()
+
 	userController := controllers.New(repo)
 	userHandler := handlers.New(userController)
-	microservice := New(Config{Port: "8080"}, userHandler)
+	microservice := New(Config{Port: "8081"}, logger, userHandler)
+	go microservice.Start()
 
 	return microservice, nil
 }
@@ -94,13 +102,11 @@ func TestUser(t *testing.T) {
 
 		assert.Equal(t, fiber.StatusCreated, resp.StatusCode)
 
-		if resp.StatusCode == fiber.StatusCreated {
-			var createResp handlers.CreateResponse
-			err = json.NewDecoder(resp.Body).Decode(&createResp)
-			require.NoError(t, err)
-			assert.NotZero(t, createResp.Id)
-			userId = createResp.Id
-		}
+		var createResp handlers.CreateResponse
+		err = json.NewDecoder(resp.Body).Decode(&createResp)
+		require.NoError(t, err)
+		assert.NotZero(t, createResp.Id)
+		userId = createResp.Id
 	})
 
 	t.Run("Get", func(t *testing.T) {
